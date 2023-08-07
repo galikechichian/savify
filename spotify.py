@@ -1,12 +1,14 @@
 # Author: Gali Kechichian
-# Backend script
+# Backend script to extract tracks info from 
+# Spotify playlist
+
 from dotenv import load_dotenv
 import os
 import base64
 from requests import post, get
 import json
 from re import search
-from pytube import YouTube
+
 
 load_dotenv()
 client_id = os.getenv("CLIENT_ID")
@@ -47,18 +49,7 @@ def extract_playlist_id(playlist_url):
         return playlist_id
     else:
         return None
-    
 
-# def get_playlist(token, link):
-#     """
-#     Makes Spotify Web API call to get server response
-#     (Get Playlist by its Spotify URL)
-#     """
-#     sp_id = extract_playlist_id(link)
-#     headers = get_auth_header(token)
-#     query_url = f"https://api.spotify.com/v1/playlists/{sp_id}/tracks"
-#     response = get(query_url, headers=headers)
-#     return response
 
 def get_playlist(token, link):
     """
@@ -124,23 +115,9 @@ def get_tracks(response):
         for artist in artists:
             artist_names.append(artist['name'])
         name = sp_item['track']['name']
-        duration = sp_item['track']['duration_ms']
-        playlist_info["tracks"].append((artist_names, name, duration))
+        playlist_info["tracks"].append((artist_names, name))
             
-    print(playlist_info["tracks"])
     return playlist_info
 
 
 token = get_token()
-
-sample_link = "https://open.spotify.com/playlist/2ayG6c4x18YP6E7CVKP3n4?si=e8f0df37dcef447e"
-sample_link2 = "https://open.spotify.com/playlist/63kAPbsf3EpKHQo6qMXrr7?si=6587d543aed7440c"
-sample_link3 = "https://open.spotify.com/playlist/69SLmftyC6GplNTXdwM7uR?si=5c5864a75740479d"
-dummy_link = "https://open.spotify.com/playlist/2ayG6c4x18YP6E7CVKP3n4?si=ba1b630d26f14cf1"
-faulty_link = "https://open.spotify.com/plylist/4C7GEVUb58cxeSVRTFRC6?si=9be3e6a70bb84a98&pt=7d6454462cfb431fad5c361d4ecf6934"
-
-# response = get_playlist(token, savify.playlist_link)
-# get_tracks(response)
-
-
-video = YouTube("http://youtu.be/mUs97qXjw1M")
