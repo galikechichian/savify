@@ -4,6 +4,7 @@ import googleapiclient.errors
 from dotenv import load_dotenv
 from pytube import YouTube
 from pathlib import Path
+import streamlit as st
 
 load_dotenv()
 api_key = os.getenv('YOUTUBE_API_KEY')
@@ -24,7 +25,7 @@ def make_search_query(artists, name):
     query = f'{artist_str} - {name} (Audio)'
     return query
 
-
+@st.cache_data
 def search_song(query):
     """
     (str) -> str
@@ -112,6 +113,7 @@ def get_downloads_path():
     return downloads_path
 
 
+@st.cache_resource
 def donwnload_video(stream, playlist_name, artists, name):
     """
     (stream) -> str

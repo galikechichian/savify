@@ -8,12 +8,12 @@ import base64
 from requests import post, get
 import json
 from re import search
+import streamlit as st
 
 
 load_dotenv()
 client_id = os.getenv("CLIENT_ID")
 client_secret = os.getenv("CLIENT_SECRET")
-
 
 def get_token():
     auth_string = client_id + ":" + client_secret
@@ -51,6 +51,7 @@ def extract_playlist_id(playlist_url):
         return None
 
 
+@st.cache_data
 def get_playlist(token, link):
     """
     Makes Spotify Web API call to get server response
