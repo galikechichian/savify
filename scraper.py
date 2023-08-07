@@ -7,6 +7,7 @@ from requests import post, get
 import json
 from re import search
 from pytube import YouTube
+import savify
 
 load_dotenv()
 client_id = os.getenv("CLIENT_ID")
@@ -124,7 +125,10 @@ sample_link = "https://open.spotify.com/playlist/2ayG6c4x18YP6E7CVKP3n4?si=e8f0d
 sample_link2 = "https://open.spotify.com/playlist/63kAPbsf3EpKHQo6qMXrr7?si=6587d543aed7440c"
 sample_link3 = "https://open.spotify.com/playlist/69SLmftyC6GplNTXdwM7uR?si=5c5864a75740479d"
 dummy_link = "https://open.spotify.com/playlist/2ayG6c4x18YP6E7CVKP3n4?si=ba1b630d26f14cf1"
-get_tracks(get_playlist(token, sample_link))
+faulty_link = "https://open.spotify.com/plylist/4C7GEVUb58cxeSVRTFRC6?si=9be3e6a70bb84a98&pt=7d6454462cfb431fad5c361d4ecf6934"
+
+# response = get_playlist(token, savify.playlist_link)
+# get_tracks(response)
 
 
 video = YouTube("http://youtu.be/mUs97qXjw1M")
