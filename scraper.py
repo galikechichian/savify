@@ -5,7 +5,7 @@ import os
 import base64
 from requests import post, get
 import json
-import re
+from re import search
 from pytube import YouTube
 
 load_dotenv()
@@ -36,10 +36,12 @@ def get_auth_header(token):
 
 def extract_playlist_id(playlist_url):
     """
+    (str) -> str        -- No errors
+    (str) -> NoneType   -- No match found, error
     Helper: given a Spotify URL, it returns a Spotify ID
     """
     pattern = r'playlist/([a-zA-Z0-9]+)'
-    match = re.search(pattern, playlist_url)
+    match = search(pattern, playlist_url)
     if match:
         playlist_id = match.group(1)
         return playlist_id
@@ -47,8 +49,33 @@ def extract_playlist_id(playlist_url):
         return None
     
 
-def get_tracks(result):
+def get_playlist(token, link):
     """
+    Makes Spotify Web API call to get server response
+    (Get Playlist by its Spotify URL)
+    """
+    sp_id = extract_playlist_id(link)
+    headers = get_auth_header(token)
+    query_url = f"https://api.spotify.com/v1/playlists/{sp_id}/tracks"
+    response = get(query_url, headers=headers)
+    return response
+
+
+def got_error(response):
+    """
+    (response) -> bool
+    returns True if API call didn't result in errros,
+    False otherwise
+    """
+    return (response.status_code != 200)
+
+
+def get_tracks(response):
+    """
+    (response) -> str           -- For error messages
+    or 
+    (response) -> list(tuples)  -- For track info
+
     Helper that filters response into a dictionary:
     playlist_info = {
         "error_message": error message
@@ -66,46 +93,38 @@ def get_tracks(result):
         "error_message": "",
         "tracks": [] # (artists.name, name ), (), ...
     }
-    json_result = json.loads(result.content)
+    json_result = json.loads(response.content)
     
-    if result.status_code != 200: 
-        playlist_info["error_message"] = json_result["error"]["message"]
-    else: 
-        playlist_info["error_message"] = None
+    if got_error(response): # got an error
+        return json_result["error"]["message"]
         
-        for sp_item in json_result["items"]:
-            artists = sp_item['track']['artists']
-            
-            artist_names = []
-            for artist in artists:
-                artist_names.append(artist['name'])
-                print(artist_names)
-            
-            name = sp_item['track']['name']
-            duration = sp_item['track']['duration_ms']
-            playlist_info["tracks"].append((artist_names, name, duration))
+    # no errors, load playlist
+    playlist_info["error_message"] = None
+    for sp_item in json_result["items"]:
+        # extract info for each item
+        # to handle unexpected NoneType items
+        if sp_item['track'] == None:
+            continue
 
+        artists = sp_item['track']['artists']
+        artist_names = []
+        for artist in artists:
+            artist_names.append(artist['name'])
+        name = sp_item['track']['name']
+        duration = sp_item['track']['duration_ms']
+        playlist_info["tracks"].append((artist_names, name, duration))
+            
     print(playlist_info["tracks"])
     return playlist_info["tracks"]
 
 
-def get_playlist(token, link):
-    """
-    Makes Spotify Web API call to get server response
-    (Get Playlist by its Spotify URL)
-    """
-    sp_id = extract_playlist_id(link)
-    headers = get_auth_header(token)
-    query_url = f"https://api.spotify.com/v1/playlists/{sp_id}/tracks"
-    result = get(query_url, headers=headers)
-    return result
-    
-
 token = get_token()
 
-sample_link = "https://open.spotify.com/playlist/63kAPbsf3EpKHQo6qMXrr7?si=a84288ecf7924cda"
+sample_link = "https://open.spotify.com/playlist/2ayG6c4x18YP6E7CVKP3n4?si=e8f0df37dcef447e"
+sample_link2 = "https://open.spotify.com/playlist/63kAPbsf3EpKHQo6qMXrr7?si=6587d543aed7440c"
+sample_link3 = "https://open.spotify.com/playlist/69SLmftyC6GplNTXdwM7uR?si=5c5864a75740479d"
+dummy_link = "https://open.spotify.com/playlist/2ayG6c4x18YP6E7CVKP3n4?si=ba1b630d26f14cf1"
 get_tracks(get_playlist(token, sample_link))
 
 
 video = YouTube("http://youtu.be/mUs97qXjw1M")
-
