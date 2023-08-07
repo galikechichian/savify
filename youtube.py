@@ -3,6 +3,7 @@ import googleapiclient.discovery
 import googleapiclient.errors
 from dotenv import load_dotenv
 from pytube import YouTube
+from pathlib import Path
 
 load_dotenv()
 api_key = os.getenv('YOUTUBE_API_KEY')
@@ -103,19 +104,34 @@ def get_filesize(stream):
     """
     if stream != None:
         return stream.filesize_mb
+    
 
-def donwnload_video(stream):
+def get_downloads_path():
+    user_home = str(Path.home())
+    downloads_path = os.path.join(user_home, "Downloads")
+    return downloads_path
+
+
+def donwnload_video(stream, playlist_name, artists, name):
     """
-    (stream) -> None
+    (stream) -> str
+    Downloads youtube video as mp3 in downloads folder
+    returns video path
     """
     if stream != None:
-        stream.download()
+        # To make mp3 file
+        filename = f"{', '.join(artists)} - {name}.mp3"
+        downloads_path = get_downloads_path() + f"/{playlist_name}"
+        video_path = stream.download(output_path=downloads_path, filename=filename)
+        return video_path
 
 
-artists = ['Andy Powell']
-name = 'Love, Lies & Flipsides'
-vid_id = get_video_id(make_search_query(artists, name))
-vid_url = get_video_url(vid_id)
-stream = get_yt_stream(vid_url)
-donwnload_video(stream)
+
+# artists = ['Madison Beer']
+# name = 'Good in Goodbye'
+# playlist_name = 'playlist'
+# vid_id = get_video_id(make_search_query(artists, name))
+# vid_url = get_video_url(vid_id)
+# stream = get_yt_stream(vid_url)
+# donwnload_video(stream, playlist_name, artists, name)
 
