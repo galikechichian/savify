@@ -7,7 +7,6 @@ from requests import post, get
 import json
 from re import search
 from pytube import YouTube
-import savify
 
 load_dotenv()
 client_id = os.getenv("CLIENT_ID")
