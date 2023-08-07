@@ -49,6 +49,17 @@ def extract_playlist_id(playlist_url):
         return None
     
 
+# def get_playlist(token, link):
+#     """
+#     Makes Spotify Web API call to get server response
+#     (Get Playlist by its Spotify URL)
+#     """
+#     sp_id = extract_playlist_id(link)
+#     headers = get_auth_header(token)
+#     query_url = f"https://api.spotify.com/v1/playlists/{sp_id}/tracks"
+#     response = get(query_url, headers=headers)
+#     return response
+
 def get_playlist(token, link):
     """
     Makes Spotify Web API call to get server response
@@ -56,7 +67,7 @@ def get_playlist(token, link):
     """
     sp_id = extract_playlist_id(link)
     headers = get_auth_header(token)
-    query_url = f"https://api.spotify.com/v1/playlists/{sp_id}/tracks"
+    query_url = f"https://api.spotify.com/v1/playlists/{sp_id}"
     response = get(query_url, headers=headers)
     return response
 
@@ -91,6 +102,7 @@ def get_tracks(response):
     """
     playlist_info = {
         "error_message": "",
+        "playlist_name": "",
         "tracks": [] # (artists.name, name ), (), ...
     }
     json_result = json.loads(response.content)
@@ -100,7 +112,8 @@ def get_tracks(response):
         
     # no errors, load playlist
     playlist_info["error_message"] = None
-    for sp_item in json_result["items"]:
+    playlist_info["playlist_name"] = json_result["name"]
+    for sp_item in json_result["tracks"]["items"]:
         # extract info for each item
         # to handle unexpected NoneType items
         if sp_item['track'] == None:
@@ -115,7 +128,7 @@ def get_tracks(response):
         playlist_info["tracks"].append((artist_names, name, duration))
             
     print(playlist_info["tracks"])
-    return playlist_info["tracks"]
+    return playlist_info
 
 
 token = get_token()

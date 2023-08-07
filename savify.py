@@ -21,10 +21,11 @@ if playlist_link != "":
     response = ""
     with st.spinner("Loading your playlist..."):
         response = get_playlist(token, playlist_link)
+        playlist_info = get_tracks(response)
     
     if (got_error(response)):
-        st.error(get_tracks(response), icon="🚨")
+        st.error(playlist_info, icon="🚨")
     else:
-        coucou = "coucou"
-        st.caption(f"Playlist name: _{coucou}_")
+        st.caption(f"_Playlist name:_ {playlist_info['playlist_name']}")
+        st.caption(f"_Number of tracks:_ {len(playlist_info['tracks'])}")
         st.button('Download Playlist')
