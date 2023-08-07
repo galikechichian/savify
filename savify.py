@@ -27,9 +27,9 @@ if playlist_link != "":
     if (got_error(response)):
         st.error(playlist_info, icon="🚨")
     else:
-        st.caption(f":green[_Playlist name:_] {playlist_info['playlist_name']}")
+        st.caption(f":blue[Playlist name:] _{playlist_info['playlist_name']}_")
         playlist_size = len(playlist_info['tracks'])
-        st.caption(f":green[_Number of tracks:_] {playlist_size}")
+        st.caption(f":blue[Number of tracks:] _{playlist_size}_")
         if (playlist_size <= 50):
             st.button('Download Playlist')
         else:
