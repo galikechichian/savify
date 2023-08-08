@@ -1,7 +1,7 @@
 # Author: Gali Kechichian
 # Main script
 from spotify import *
-# from youtube import *
+from youtube import *
 import streamlit as st
 
 token = get_token()
@@ -16,7 +16,7 @@ space()
 
 song_link = st.text_input(
     "Enter a valid Spotify song URL:", 
-    placeholder="Paste URL here"
+    placeholder="Example: https://open.spotify.com/track/58sxA5EEjq57yGggwThArx?si=edf556a1afcb4ab3"
     # help="- Must be public\n- No more than 30 tracks",
     )
 
@@ -25,18 +25,15 @@ if song_link != "":
     response = ""
     with st.spinner("Loading your song..."):
         response = get_track(token, song_link)
-        track_info = get_track_info(get_track(token, song_link))
+        track_info = get_track_info(response)
     
     if (got_error(response)):
         st.error(track_info, icon="🚨")
     else:
         st.caption(f"Song: _{track_info['name']}_")
         st.caption(f"Artist(s): _{', '.join(track_info['artists'])}_")
-        # Create a placeholder for the button
-        button_placeholder = st.empty()
-        # Check if the "Download All" button should be shown
-        if button_placeholder.button('Download Song'):
-            # print('Load mp3 files')
-            print(1)
 
+        if st.button('Donwload Track'):
+            # st.write(track_info)
+            download_track(track_info)
 

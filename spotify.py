@@ -15,7 +15,6 @@ load_dotenv()
 client_id = os.getenv("CLIENT_ID")
 client_secret = os.getenv("CLIENT_SECRET")
 
-@st.cache_data
 def get_token():
     auth_string = client_id + ":" + client_secret
     auth_bytes = auth_string.encode("utf-8")
@@ -153,9 +152,8 @@ def get_playlist_info(response):
 
 def get_track_info(_response):
     """
-    (response) -> str           -- For error messages
-    or 
-    (response) -> list(tuples)  -- For track info
+    (response) -> dict           -- For track info
+    (response) -> str             -- For errors
 
     Helper that filters response into a dictionary:
     track_info = {
@@ -181,5 +179,4 @@ def get_track_info(_response):
         artists.append(artist["name"])
     track_info["artists"] = artists
     track_info["name"] = json_result["name"]  
-    # print("ran 'get track info'")             # testing if caching worked
     return track_info
