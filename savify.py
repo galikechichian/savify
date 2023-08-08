@@ -4,8 +4,6 @@ from spotify import *
 # from youtube import *
 import streamlit as st
 
-token = get_token()
-
 def space(): 
     st.write('\n\n')
 
