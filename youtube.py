@@ -4,7 +4,8 @@ import googleapiclient.errors
 from dotenv import load_dotenv
 from pytube import YouTube
 from pathlib import Path
-import streamlit as st
+from requests import get
+from bs4 import BeautifulSoup
 
 load_dotenv()
 api_key = os.getenv('YOUTUBE_API_KEY')
@@ -25,7 +26,7 @@ def make_search_query(artists, name):
     query = f'{artist_str} - {name} (Audio)'
     return query
 
-@st.cache_data
+
 def search_song(query):
     """
     (str) -> str
@@ -113,7 +114,6 @@ def get_downloads_path():
     return downloads_path
 
 
-@st.cache_resource
 def donwnload_video(stream, playlist_name, artists, name):
     """
     (stream) -> str
@@ -128,7 +128,6 @@ def donwnload_video(stream, playlist_name, artists, name):
         return video_path
 
 
-
 # artists = ['Madison Beer']
 # name = 'Good in Goodbye'
 # playlist_name = 'playlist'
@@ -137,3 +136,26 @@ def donwnload_video(stream, playlist_name, artists, name):
 # stream = get_yt_stream(vid_url)
 # donwnload_video(stream, playlist_name, artists, name)
 
+
+def get_search_url(query):
+    return f"https://www.google.com/search?q={query}"
+
+
+# def get_google_search_result(query):
+#     url = get_search_url(query)
+#     response = get(url)
+#     soup = BeautifulSoup(response.content, 'html.parser')
+#     print(soup.prettify())
+
+
+from spotify import *
+
+url = "https://open.spotify.com/playlist/2ayG6c4x18YP6E7CVKP3n4?si=d956b4ed276e46b9"
+playlist_info = get_playlist_info(get_playlist(token, url))
+q = make_search_query(playlist_info["tracks"][0][0], playlist_info["tracks"][0][1])
+
+
+# artists = ['Madison Beer']
+# name = 'Good in Goodbye'
+# query = make_song_search_query(artists, name)
+# yt_results = get_yt_results(query)

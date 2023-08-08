@@ -15,6 +15,7 @@ load_dotenv()
 client_id = os.getenv("CLIENT_ID")
 client_secret = os.getenv("CLIENT_SECRET")
 
+
 def get_token():
     auth_string = client_id + ":" + client_secret
     auth_bytes = auth_string.encode("utf-8")
@@ -51,6 +52,21 @@ def extract_playlist_id(playlist_url):
         return None
 
 
+def extract_track_id(track_url):
+    """
+    (str) -> str        -- No errors
+    (str) -> NoneType   -- No match found, error
+    Helper: given a Spotify URL, it returns a Spotify ID
+    """
+    pattern = r'track/([a-zA-Z0-9]+)'
+    match = search(pattern, track_url)
+    if match:
+        track_id = match.group(1)
+        return track_id
+    else:
+        return None
+
+
 @st.cache_data
 def get_playlist(token, link):
     """
@@ -64,6 +80,20 @@ def get_playlist(token, link):
     return response
 
 
+@st.cache_data
+def get_track(token, link):
+    """
+    Makes Spotify Web API call to get server response
+    (Get Playlist by its Spotify URL)
+    """
+    sp_id = extract_track_id(link)
+    headers = get_auth_header(token)
+    query_url = f"https://api.spotify.com/v1/tracks/{sp_id}"
+    response = get(query_url, headers=headers)
+    print("ran 'get track'")
+    return response
+
+
 def got_error(response):
     """
     (response) -> bool
@@ -73,7 +103,7 @@ def got_error(response):
     return (response.status_code != 200)
 
 
-def get_tracks(response):
+def get_playlist_info(response):
     """
     (response) -> str           -- For error messages
     or 
@@ -82,9 +112,10 @@ def get_tracks(response):
     Helper that filters response into a dictionary:
     playlist_info = {
         "error_message": error message
+        "playlist_name: name
         "tracks": [
-            (artists, name, duration),
-            (artists, name, duration),
+            (artists, name),
+            (artists, name),
             ...
         ]
     }
@@ -121,4 +152,36 @@ def get_tracks(response):
     return playlist_info
 
 
-token = get_token()
+@st.cache_data
+def get_track_info(_response):
+    """
+    (response) -> str           -- For error messages
+    or 
+    (response) -> list(tuples)  -- For track info
+
+    Helper that filters response into a dictionary:
+    track_info = {
+        "error_message": error message
+        "artists": [artist0, artist1, ...]
+        "name": name
+    }
+    """
+    track_info = {
+        "error_message": "",
+        "artists": [],
+        "name": []
+    }
+    json_result = json.loads(_response.content)
+    
+    if got_error(_response): # got an error
+        return json_result["error"]["message"]
+        
+    # no errors, load playlist
+    track_info["error_message"] = None
+    artists = []
+    for artist in json_result["artists"]:
+        artists.append(artist["name"])
+    track_info["artists"] = artists
+    track_info["name"] = json_result["name"]  
+    # print("ran 'get track info'")             # testing if caching worked
+    return track_info
