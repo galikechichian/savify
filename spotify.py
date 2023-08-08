@@ -90,7 +90,6 @@ def get_track(token, link):
     headers = get_auth_header(token)
     query_url = f"https://api.spotify.com/v1/tracks/{sp_id}"
     response = get(query_url, headers=headers)
-    print("ran 'get track'")
     return response
 
 
@@ -152,7 +151,6 @@ def get_playlist_info(response):
     return playlist_info
 
 
-@st.cache_data
 def get_track_info(_response):
     """
     (response) -> str           -- For error messages
