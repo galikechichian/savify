@@ -183,6 +183,3 @@ def get_track_info(_response):
     track_info["name"] = json_result["name"]  
     # print("ran 'get track info'")             # testing if caching worked
     return track_info
-
-
-token = get_token()
