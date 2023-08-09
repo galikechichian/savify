@@ -11,7 +11,9 @@ def space():
     st.write('\n\n')
 
 st.title("Savify.")
+st.subheader('This app is still a work in progress. Stay tuned! :)')
 st.subheader("Enjoy your favorite Spotify songs offline.")
+
 
 space()
 
