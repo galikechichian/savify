@@ -19,18 +19,20 @@ youtube = googleapiclient.discovery.build(
 def make_search_query(track_info):
     """
     (dict) -> str
+    (str)  -> None
     Given the artist names and song title, returns search query string
     """
-    print(str(track_info))
+    if type(track_info) == str:
+        return None
     name = track_info["name"]
     artist_str = ', '.join(track_info["artists"])
     query = f'{artist_str} - {name} (Audio)'
     return query
 
-# @st.cache_data
+@st.cache_data
 def search_song(track_info):
     """
-    (str) -> str
+    (dict) -> str
     Given a search query string, scrapes for the 1st result 
     on YouTube and returns its Video ID
     ***
@@ -39,6 +41,9 @@ def search_song(track_info):
     (query) -> 2        -- No results
     """
     query = make_search_query(track_info)
+    if query == None:
+        return None
+    
     request = youtube.search().list(
         part="snippet",
         maxResults=1,
@@ -50,13 +55,14 @@ def search_song(track_info):
     video_dict = response["items"][0]
     if video_dict["id"]["kind"] != 'youtube#video':
         return None 
+    print('made api call')
     return video_dict
 
 
 def get_video_id(track_info):
     """
-    (str) -> str        -- No issues, video is found
-    (str) -> 1          -- Couldn't find requested video
+    (dict) -> str        -- No issues, video is found
+    (dict) -> 1          -- Couldn't find requested video
     Takes search query string as input
     Returns YouTube Video ID
     """
@@ -69,8 +75,8 @@ def get_video_id(track_info):
 
 def get_video_url(track_info):
     """
-    (str) -> str               -- No issues, video found
-    (str) -> None              -- Video not found, proceed with caution :p
+    (dict) -> str               -- No issues, video found
+    (dict) -> None              -- Video not found, proceed with caution :p
     Takes video ID as input
     Returns its youtube URL
     """
@@ -80,8 +86,8 @@ def get_video_url(track_info):
 
 def make_yt_obj(track_info):
     """
-    (str) -> YouTube        -- No issues
-    (str) -> None           -- Video not found
+    (dict) -> YouTube        -- No issues
+    (dict) -> None           -- Video not found
     """
     video_url = get_video_url(track_info)
     if video_url != None:
@@ -92,11 +98,12 @@ def make_yt_obj(track_info):
 
 def get_yt_stream(track_info):
     """
-    (str) -> stream                 -- No errors
-    (str) -> None                   -- Stream not found
+    (dict) -> stream                 -- No errors
+    (dict) -> None                   -- Stream not found
     Gets stream from YouTube URL
     """
     video_url = get_video_url(track_info)
+    print(video_url)
     yt = make_yt_obj(video_url)
     if yt != None:
         stream = yt.streams.filter(only_audio=True).first()
@@ -141,42 +148,14 @@ def temp_dl(track_info):
 # @st.cache_resource
 def download_track(track_info):
     filename = temp_dl(track_info)
-    st.success("MP3 Download Complete!")
-    st.download_button(
-        "Download Track", 
-        data=open(f"temp/{filename}", "rb").read(),
-        file_name=filename
-        )
-    st.cache_resource.clear()
-
-# artists = ['Madison Beer']
-# name = 'Good in Goodbye'
-# playlist_name = 'playlist'
-# vid_id = get_video_id(make_search_query(artists, name))
-# vid_url = get_video_url(vid_id)
-# stream = get_yt_stream(vid_url)
-# donwnload_video(stream, playlist_name, artists, name)
+    # st.success("MP3 Download Complete!")
+    # st.download_button(
+    #     "Download Track", 
+    #     data=open(f"temp/{filename}", "rb").read(),
+    #     file_name=filename
+    #     )
+    # st.cache_resource.clear()
 
 
 def get_search_url(query):
     return f"https://www.google.com/search?q={query}"
-
-
-# def get_google_search_result(query):
-#     url = get_search_url(query)
-#     response = get(url)
-#     soup = BeautifulSoup(response.content, 'html.parser')
-#     print(soup.prettify())
-
-
-# from spotify import *
-
-# url = "https://open.spotify.com/playlist/2ayG6c4x18YP6E7CVKP3n4?si=d956b4ed276e46b9"
-# playlist_info = get_playlist_info(get_playlist(get_token(), url))
-# q = make_search_query(playlist_info["tracks"][0][0], playlist_info["tracks"][0][1])
-
-
-# artists = ['Madison Beer']
-# name = 'Good in Goodbye'
-# query = make_song_search_query(artists, name)
-# yt_results = get_yt_results(query)
