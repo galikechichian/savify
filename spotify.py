@@ -15,6 +15,7 @@ load_dotenv()
 client_id = os.getenv("CLIENT_ID")
 client_secret = os.getenv("CLIENT_SECRET")
 
+
 def get_token():
     auth_string = client_id + ":" + client_secret
     auth_bytes = auth_string.encode("utf-8")
@@ -36,21 +37,6 @@ def get_auth_header(token):
     return {"Authorization": "Bearer " + token}
 
 
-def extract_playlist_id(playlist_url):
-    """
-    (str) -> str        -- No errors
-    (str) -> NoneType   -- No match found, error
-    Helper: given a Spotify URL, it returns a Spotify ID
-    """
-    pattern = r'playlist/([a-zA-Z0-9]+)'
-    match = search(pattern, playlist_url)
-    if match:
-        playlist_id = match.group(1)
-        return playlist_id
-    else:
-        return None
-
-
 def extract_track_id(track_url):
     """
     (str) -> str        -- No errors
@@ -65,27 +51,13 @@ def extract_track_id(track_url):
     else:
         return None
 
-
-@st.cache_data
-def get_playlist(token, link):
+@st.cache_data(show_spinner=False)
+def get_track(sp_id):
     """
     Makes Spotify Web API call to get server response
     (Get Playlist by its Spotify URL)
     """
-    sp_id = extract_playlist_id(link)
-    headers = get_auth_header(token)
-    query_url = f"https://api.spotify.com/v1/playlists/{sp_id}"
-    response = get(query_url, headers=headers)
-    return response
-
-
-@st.cache_data
-def get_track(token, link):
-    """
-    Makes Spotify Web API call to get server response
-    (Get Playlist by its Spotify URL)
-    """
-    sp_id = extract_track_id(link)
+    token = get_token()
     headers = get_auth_header(token)
     query_url = f"https://api.spotify.com/v1/tracks/{sp_id}"
     response = get(query_url, headers=headers)
@@ -99,55 +71,6 @@ def got_error(response):
     False otherwise
     """
     return (response.status_code != 200)
-
-
-def get_playlist_info(response):
-    """
-    (response) -> str           -- For error messages
-    or 
-    (response) -> list(tuples)  -- For track info
-
-    Helper that filters response into a dictionary:
-    playlist_info = {
-        "error_message": error message
-        "playlist_name: name
-        "tracks": [
-            (artists, name),
-            (artists, name),
-            ...
-        ]
-    }
-    0 -> artists
-    1 -> song name
-    2 -> duration in ms
-    """
-    playlist_info = {
-        "error_message": "",
-        "playlist_name": "",
-        "tracks": [] # (artists.name, name ), (), ...
-    }
-    json_result = json.loads(response.content)
-    
-    if got_error(response): # got an error
-        return json_result["error"]["message"]
-        
-    # no errors, load playlist
-    playlist_info["error_message"] = None
-    playlist_info["playlist_name"] = json_result["name"]
-    for sp_item in json_result["tracks"]["items"]:
-        # extract info for each item
-        # to handle unexpected NoneType items
-        if sp_item['track'] == None:
-            continue
-
-        artists = sp_item['track']['artists']
-        artist_names = []
-        for artist in artists:
-            artist_names.append(artist['name'])
-        name = sp_item['track']['name']
-        playlist_info["tracks"].append((artist_names, name))
-            
-    return playlist_info
 
 
 def get_track_info(_response):

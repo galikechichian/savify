@@ -3,8 +3,8 @@ import googleapiclient.discovery
 import googleapiclient.errors
 from dotenv import load_dotenv
 from pytube import YouTube
-from pathlib import Path
 import streamlit as st
+from io import BytesIO
 
 load_dotenv()
 api_key = os.getenv('YOUTUBE_API_KEY')
@@ -29,7 +29,8 @@ def make_search_query(track_info):
     query = f'{artist_str} - {name} (Audio)'
     return query
 
-@st.cache_data
+
+@st.cache_data(show_spinner=False)
 def search_song(track_info):
     """
     (dict) -> str
@@ -55,7 +56,7 @@ def search_song(track_info):
     video_dict = response["items"][0]
     if video_dict["id"]["kind"] != 'youtube#video':
         return None 
-    print('made api call')
+    # print('made api call')
     return video_dict
 
 
@@ -70,18 +71,8 @@ def get_video_id(track_info):
     if video_dict == None:
         return None
     video_id = video_dict["id"]["videoId"]
+    # print(f"Video ID: {video_id}")
     return video_id
-
-
-def get_video_url(track_info):
-    """
-    (dict) -> str               -- No issues, video found
-    (dict) -> None              -- Video not found, proceed with caution :p
-    Takes video ID as input
-    Returns its youtube URL
-    """
-    video_id = get_video_id(track_info)
-    return f"https://www.youtube.com/watch?v={video_id}"
 
 
 def make_yt_obj(track_info):
@@ -89,9 +80,10 @@ def make_yt_obj(track_info):
     (dict) -> YouTube        -- No issues
     (dict) -> None           -- Video not found
     """
-    video_url = get_video_url(track_info)
-    if video_url != None:
-        yt = YouTube(video_url)
+    # video_url = get_video_url(track_info)
+    video_id = get_video_id(track_info)
+    if video_id != None:
+        yt = YouTube.from_id(video_id)
         return yt
     return None
 
@@ -102,60 +94,46 @@ def get_yt_stream(track_info):
     (dict) -> None                   -- Stream not found
     Gets stream from YouTube URL
     """
-    video_url = get_video_url(track_info)
-    print(video_url)
-    yt = make_yt_obj(video_url)
+    yt = make_yt_obj(track_info)
     if yt != None:
-        stream = yt.streams.filter(only_audio=True).first()
+        stream = yt.streams.get_audio_only()
         return stream
 
 
-def get_filesize(video_url):
+def get_filesize(track_info):
     """
     (stream) -> float           -- No errors
     (stream) -> None    `       -- Stream not found
     Returns file size in MB
     """
-    stream = get_yt_stream(video_url)
-    if stream != None:
-        return stream.filesize_mb
-    
-
-def get_downloads_path():
-    user_home = str(Path.home())
-    downloads_path = os.path.join(user_home, "Downloads")
-    return downloads_path
-
-
-def temp_dl(track_info):
-    """
-    (stream) -> str
-    Downloads youtube video as mp3 in downloads folder
-    returns filename
-    """
     stream = get_yt_stream(track_info)
+    if stream != None:
+        return stream._filesize_mb
+    return None
+
+
+def get_filename(track_info):
+    """
+    (dict) -> str
+    Takes in track info dictionary, returns the filename
+    that would be used to download it
+    """
     artists = track_info['artists']
     name = track_info['name']
+    filename = f"{', '.join(artists)} - {name}.mp3"
+    return filename
+
+
+@st.cache_data(show_spinner=False)
+def download_audio_to_buffer(track_info):
+    """
+    (stream) -> BytesIO
+    Takes track info as input
+    Returns audio buffer
+    """
+    buffer = BytesIO()
+    stream = get_yt_stream(track_info)
     if stream != None:
-        # To make mp3 file
-        filename = f"{', '.join(artists)} - {name}.mp3"
-        # downloads_path = get_downloads_path()
-        # video_path = stream.download(output_path=downloads_path, filename=filename)
-        stream.download(output_path="temp", filename=filename)
-        return filename
-    
-
-# @st.cache_resource
-def download_track(track_info):
-    filename = temp_dl(track_info)
-    # st.success("MP3 Download Complete!")
-    # st.download_button(
-    #     "Download Track", 
-    #     data=open(f"temp/{filename}", "rb").read(),
-    #     file_name=filename
-    #     )
-    # st.cache_resource.clear()
-
-
-def get_search_url(query):
-    return f"https://www.google.com/search?q={query}"
+        stream.stream_to_buffer(buffer)
+        return buffer
+    return None
